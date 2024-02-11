@@ -87,6 +87,10 @@ class AddressBook(UserDict):
     def __iter__(self):
         return iter(self.data.values())
 
+    def get_first_n_records(self, n):
+        record_iterator = iter(self.values())
+        return [next(record_iterator) for _ in range(n)]
+
     def search_records(self, criteria):
         result = []
         for record in self.values():
@@ -163,6 +167,24 @@ class AssistantBot:
 
         return "\n".join(contact_info)
 
+    @input_error
+    def handle_show_n_records(self, data):
+        try:
+            n = int(data)
+        except ValueError:
+            raise ValueError("Podaj liczbę rekordów do wyświetlenia.")
+
+        first_n_records = self.get_first_n_records(n)
+        if not first_n_records:
+            return "Brak dostępnych rekordów."
+
+        return "\n".join(
+            [
+                f"{record.name.value}: {record.phones[0].value}, Birthday: {record.birthday.value if record.birthday else 'None'}"
+                for record in first_n_records
+            ]
+        )
+
     def main(self):
         while True:
             user_input = input("Wprowadź polecenie: ").lower()
@@ -182,6 +204,8 @@ class AssistantBot:
                 print(self.handle_days_to_birthday(user_input[17:]))
             elif user_input == "show all":
                 print(self.handle_show_all())
+            elif user_input.startswith("show n records"):
+                print(self.handle_show_n_records(user_input[14:]))
             else:
                 print("Nieznane polecenie. Spróbuj ponownie.")
 
