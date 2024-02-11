@@ -49,7 +49,9 @@ class Record:
     def __init__(self, name, phone, birthday=None):
         self.name = Name(name)
         self.phones = [Phone(phone)]
-        self.birthday = Birthday(birthday) if birthday else None
+        self.birthday = None
+        if birthday is not None:
+            self.birthday = Birthday(birthday)
 
     def add_phone(self, phone):
         new_phone = Phone(phone)
@@ -87,10 +89,6 @@ class AddressBook(UserDict):
     def __iter__(self):
         return iter(self.data.values())
 
-    def get_first_n_records(self, n):
-        record_iterator = iter(self.values())
-        return [next(record_iterator) for _ in range(n)]
-
     def search_records(self, criteria):
         result = []
         for record in self.values():
@@ -107,6 +105,10 @@ class AssistantBot:
     def __init__(self):
         self.contacts = {}
 
+    def get_first_n_records(self, n):
+        record_iterator = iter(self.contacts.values())
+        return [next(record_iterator) for _ in range(n)]
+
     def input_error(func):
         def errors(*args, **kwargs):
             try:
@@ -114,7 +116,7 @@ class AssistantBot:
             except KeyError:
                 return "Wprowadź nazwę użytkownika."
             except ValueError:
-                return "Podaj nazwę i telefon."
+                return "Podaj nazwę, telefon."
             except IndexError:
                 return "Nie znaleziono kontaktu o podanej nazwie."
 
@@ -126,7 +128,8 @@ class AssistantBot:
 
     @input_error
     def handle_add(self, data):
-        name, phone, birthday = data.split()
+        name, phone, *birthday = data.split()
+        birthday = birthday[0] if birthday else None
         self.contacts[name] = Record(name, phone, birthday)
         return f"Kontakt {name} dodany z numerem telefonu {phone} i datą urodzin {birthday}."
 
